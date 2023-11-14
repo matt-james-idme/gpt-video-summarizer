@@ -14,17 +14,33 @@ Before you can use this script, you'll need the following:
 pip install youtube-transcript-api
 ```
    
-5. The `openai` Python library, which can be installed using `pip`: pip install openai
+5. The `openai` Python library, which can be installed using `pip`:
+
+```
+pip install openai
+```
 
 ## Usage
 
 1. Clone this repository to your local machine: git clone https://github.com/your-username/youtube-video-summarizer.git
-- cd youtube-video-summarizer
+
+```
+cd youtube-video-summarizer
+```
    
-2. Set your OpenAI API key as an environment variable by either exporting it or adding it to a `.env` file in the project directory: export OPENAI_API_KEY=your-api-key
+2. Set your OpenAI API key as an environment variable by either exporting it or adding it to a `.env` file in the project directory:
+
+```
+export OPENAI_API_KEY=your-api-key
+```
+
 - or create a `.env` file with the following content: OPENAI_API_KEY=your-api-key
 
-3. Run the script by executing: python summarize_video.py
+3. Run the script by executing:
+
+```
+python summarize_video.py
+```
 
 4. You'll be prompted to enter the YouTube Video ID (the alphanumeric code in the video's URL) for the video you want to summarize.
 
