@@ -34,7 +34,11 @@ cd youtube-video-summarizer
 export OPENAI_API_KEY=your-api-key
 ```
 
-- or create a `.env` file with the following content: OPENAI_API_KEY=your-api-key
+...or create a `.env` file with the following content: 
+
+'''
+OPENAI_API_KEY=your-api-key
+'''
 
 3. Run the script by executing:
 
