@@ -8,19 +8,18 @@ Before you can use this script, you'll need the following:
 
 1. An OpenAI GPT-3 API key. You can obtain an API key by signing up for an account on the OpenAI platform.
 2. Python 3 installed on your system.
-3. The `youtube_transcript_api` Python library, which can be installed using `pip`: '''pip install youtube-transcript-api'''
-4. The `openai` Python library, which can be installed using `pip`: '''pip install openai'''
+3. The `youtube_transcript_api` Python library, which can be installed using `pip`: pip install youtube-transcript-api
+4. The `openai` Python library, which can be installed using `pip`: pip install openai
 
 ## Usage
 
 1. Clone this repository to your local machine: git clone https://github.com/your-username/youtube-video-summarizer.git
 - cd youtube-video-summarizer
    
-2. Set your OpenAI API key as an environment variable by either exporting it or adding it to a `.env` file in the project directory: '''export OPENAI_API_KEY=your-api-key
-- or create a `.env` file with the following content: '''OPENAI_API_KEY=your-api-key
+2. Set your OpenAI API key as an environment variable by either exporting it or adding it to a `.env` file in the project directory: export OPENAI_API_KEY=your-api-key
+- or create a `.env` file with the following content: OPENAI_API_KEY=your-api-key
 
 3. Run the script by executing: python summarize_video.py
-
 
 4. You'll be prompted to enter the YouTube Video ID (the alphanumeric code in the video's URL) for the video you want to summarize.
 
