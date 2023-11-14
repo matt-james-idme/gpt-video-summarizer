@@ -16,8 +16,8 @@ Before you can use this script, you'll need the following:
 1. Clone this repository to your local machine: git clone https://github.com/your-username/youtube-video-summarizer.git
 - cd youtube-video-summarizer
    
-2. Set your OpenAI API key as an environment variable by either exporting it or adding it to a `.env` file in the project directory: export OPENAI_API_KEY=your-api-key
-- or create a `.env` file with the following content: OPENAI_API_KEY=your-api-key
+2. Set your OpenAI API key as an environment variable by either exporting it or adding it to a `.env` file in the project directory: '''export OPENAI_API_KEY=your-api-key
+- or create a `.env` file with the following content: '''OPENAI_API_KEY=your-api-key
 
 3. Run the script by executing: python summarize_video.py
 
