@@ -8,8 +8,13 @@ Before you can use this script, you'll need the following:
 
 1. An OpenAI GPT-3 API key. You can obtain an API key by signing up for an account on the OpenAI platform.
 2. Python 3 installed on your system.
-3. The `youtube_transcript_api` Python library, which can be installed using `pip`: pip install youtube-transcript-api
-4. The `openai` Python library, which can be installed using `pip`: pip install openai
+3. The `youtube_transcript_api` Python library, which can be installed using `pip`:
+
+```
+pip install youtube-transcript-api
+```
+   
+5. The `openai` Python library, which can be installed using `pip`: pip install openai
 
 ## Usage
 
