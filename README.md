@@ -38,7 +38,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- [https://twitter.com/DanielMiessler] - Daniel Miessler for inspiring the project with his own.
+- [Daniel Miessler](https://twitter.com/DanielMiessler) for inspiring the project with his own.
 - [OpenAI](https://openai.com) for providing the GPT-3 API.
 - [youtube_transcript_api](https://github.com/jdepoix/youtube-transcript-api) for the YouTube transcript retrieval.
 
