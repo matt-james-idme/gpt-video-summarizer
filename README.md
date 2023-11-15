@@ -43,7 +43,7 @@ OPENAI_API_KEY=your-api-key
 3. Run the script by executing:
 
 ```
-python summarize_video.py
+python transcribe.py
 ```
 
 4. You'll be prompted to enter the YouTube Video ID (the alphanumeric code in the video's URL) for the video you want to summarize.
