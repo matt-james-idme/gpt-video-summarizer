@@ -43,7 +43,7 @@ OPENAI_API_KEY=your-api-key
 3. Run the script by executing:
 
 ```
-python transcribe.py
+python3 transcribe.py
 ```
 
 4. You'll be prompted to enter the YouTube Video ID (the alphanumeric code in the video's URL) for the video you want to summarize.
@@ -54,7 +54,7 @@ python transcribe.py
 
 ## Customization
 
-You can customize the behavior of the script by modifying the code in `summarize_video.py`. You can adjust parameters such as the maximum token limit and temperature for the GPT-3 model, or change the prompt to better suit your needs.
+You can customize the behavior of the script by modifying the code in `transcribe.py`. You can adjust parameters such as the maximum token limit and temperature for the GPT-3 model, or change the prompt to better suit your needs.
 
 ## License
 
