@@ -25,7 +25,7 @@ pip install openai
 1. Clone this repository to your local machine: git clone https://github.com/clorth0/gpt-video-summarizer.git
 
 ```
-cd youtube-video-summarizer
+cd gpt-video-summarizer
 ```
    
 2. Set your OpenAI API key as an environment variable by either exporting it or adding it to a `.env` file in the project directory:
