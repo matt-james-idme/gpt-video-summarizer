@@ -22,7 +22,7 @@ pip install openai
 
 ## Usage
 
-1. Clone this repository to your local machine: git clone https://github.com/your-username/youtube-video-summarizer.git
+1. Clone this repository to your local machine: git clone [https://github.com/your-username/youtube-video-summarizer.git](https://github.com/clorth0/gpt-video-summarizer.git)
 
 ```
 cd youtube-video-summarizer
