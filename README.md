@@ -69,6 +69,8 @@ Conclusion: This video argues that regular effort and discipline are more impact
   - `generate_summary(transcript)`
 - Uses OpenAI's `chat` API (recommended)
 - Logging replaces print-based debugging
+- Errors are logged with context (e.g. transcript issues, API failures)
+- Summary prompt is hardcoded; customize by editing the `user_prompt` string inside `generate_summary()`
 
 ## License
 
