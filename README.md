@@ -1,23 +1,28 @@
 # GPT YouTube Video Summarizer (Updated)
 
-This is a Python-based tool for extracting transcripts from YouTube videos and summarizing them using OpenAI's GPT models. The script leverages the YouTube Transcript API and OpenAI's `chat.completion` endpoint to provide structured summaries with a title, key bullet points, and a conclusion.
+This is a Python-based tool for extracting transcripts from YouTube videos and summarizing them using OpenAI's GPT models. The script leverages the YouTube Transcript API and OpenAI's `chat.completions` endpoint to provide structured summaries with a title, key bullet points, action steps, and any cited statistics.
 
 ## Features
 
 - Fetches YouTube video transcripts using `youtube_transcript_api`
-- Generates structured summaries via GPT-3.5 or GPT-4
-- Customizable prompt settings: temperature, max_tokens
-- Secure API key handling with `.env` support
-- CLI support via `argparse` for flexible usage
-- Logging and error handling for robustness
+- Falls back to OpenAI Whisper API if transcript is unavailable
+- Generates structured summaries using GPT-4 (or GPT-3.5)
+- Real-time spinner progress during transcription
+- Secure API key handling using `.env` or environment variables
+- Modular and extensible Python script
 
 ## Requirements
 
 - Python 3.8+
-- OpenAI API key (stored in `.env` or exported as `OPENAI_API_KEY`)
+- OpenAI API key (set via `.env` or `OPENAI_API_KEY`)
 - Required libraries:
   ```bash
-  pip install openai youtube-transcript-api python-dotenv
+  pip install openai youtube-transcript-api pytube yt-dlp python-dotenv
+  ```
+- `ffmpeg` for audio processing (required by `yt-dlp`)
+  ```bash
+  brew install ffmpeg  # macOS
+  sudo apt install ffmpeg  # Ubuntu/Debian
   ```
 
 ## Usage
@@ -25,25 +30,23 @@ This is a Python-based tool for extracting transcripts from YouTube videos and s
 ### Step 1: Set your OpenAI API Key
 
 Create a `.env` file in the root directory:
-```bash
+```env
 OPENAI_API_KEY=your-api-key-here
+```
+Or export it directly:
+```bash
+export OPENAI_API_KEY=your-api-key-here
 ```
 
 ### Step 2: Run the summarizer
 
 ```bash
-python summarize.py <video_id>
-```
-
-#### Optional Arguments:
-```bash
---max_tokens     Maximum tokens in the summary (default: 150)
---temperature    Sampling temperature for GPT (default: 0.7)
+python transcribe.py <video_id>
 ```
 
 ### Example
 ```bash
-python summarize.py dQw4w9WgXcQ --max_tokens 300 --temperature 0.5
+python transcribe.py dQw4w9WgXcQ
 ```
 
 ## Output
@@ -51,26 +54,35 @@ python summarize.py dQw4w9WgXcQ --max_tokens 300 --temperature 0.5
 The output will be printed to the console in a structured format:
 
 ```
---- Video Summary ---
+--- Structured Summary ---
 
-Title: Why Consistency Beats Talent
+Summary:
+This video discusses how sustained effort beats innate talent over the long term.
 
-- Success is often the result of sustained effort, not raw skill
-- Consistency leads to compounding progress over time
-- People underestimate the power of showing up every day
+Key Points:
+- Daily practice outperforms occasional bursts of brilliance
+- Talent without consistency leads to stagnation
+- Routine creates long-term momentum
 
-Conclusion: This video argues that regular effort and discipline are more impactful than short bursts of brilliance.
+Actionable Steps:
+- Set small, repeatable goals
+- Focus on showing up every day
+- Track progress over time
+
+Statistics or Claims:
+- Referenced the “10,000-hour rule” as a benchmark for mastery
 ```
 
 ## Development Notes
 
-- Script modularized into:
-  - `get_transcript(video_id)`
-  - `generate_summary(transcript)`
-- Uses OpenAI's `chat` API (recommended)
-- Logging replaces print-based debugging
-- Errors are logged with context (e.g. transcript issues, API failures)
-- Summary prompt is hardcoded; customize by editing the `user_prompt` string inside `generate_summary()`
+- Modular structure:
+  - `get_transcript(video_id)` — fetch from YouTube
+  - `download_audio(video_id)` + `transcribe_whisper()` — fallback
+  - `summarize(transcript, title)` — GPT-powered summary
+- Uses OpenAI Python SDK v1.x (latest)
+- Spinner indicates processing during Whisper API calls
+- Structured prompt improves clarity of output
+- Errors are logged clearly for diagnosis
 
 ## License
 
