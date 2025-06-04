@@ -1,86 +1,98 @@
+#!/usr/bin/env python3
+"""
+Updated YouTube Video Summarizer
+- Uses latest openai.ChatCompletion endpoint for GPT models.
+- Enhanced error handling, logging, and modular code.
+"""
+
 import os
+import logging
+from dotenv import load_dotenv
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 import openai
-from youtube_transcript_api import YouTubeTranscriptApi
+import argparse
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# Load environment variables from .env, if available
+load_dotenv()
 
-def get_transcript(video_id):
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
+
+def get_transcript(video_id: str) -> str:
+    """
+    Retrieve the transcript for a given YouTube video id.
+    """
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)
-        full_transcript = " ".join([seg['text'] for seg in transcript])
-        return full_transcript
+        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript = " ".join([entry["text"] for entry in transcript_list])
+        logging.info("Transcript retrieved successfully.")
+        return transcript
+    except TranscriptsDisabled:
+        logging.error("Transcripts are disabled for this video.")
+        raise
+    except NoTranscriptFound:
+        logging.error("No transcript found for this video.")
+        raise
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return None
+        logging.error(f"Unexpected error: {e}")
+        raise
 
-def extract_video_summary_from_chunk(chunk, max_tokens=2000):
+
+def generate_summary(transcript: str, max_tokens: int = 150, temperature: float = 0.7) -> str:
+    """
+    Generate a summary using OpenAI's ChatCompletion API.
+    """
+    # Prepare the system and user prompts
+    system_prompt = "You are a helpful assistant summarizing YouTube video transcripts."
+    user_prompt = (
+        "Generate a concise summary of the following transcript. "
+        "Include a title, an introductory sentence, bullet points for major topics, and a concluding sentence.\n"
+        f"Transcript: {transcript}"
+    )
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo",  # or use gpt-4 if available
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides a video summary."},
-                {"role": "user", "content": f"Provide a summary of the following video:\n{chunk}\n\n[Please provide context or a brief description of the video's topic to assist in generating a summary.]"},
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             max_tokens=max_tokens,
-            temperature=0.7,
-            stop=["\n"]  # Stop on newlines to capture complete sentences
+            temperature=temperature,
         )
-        
-        # Extract the generated summary
-        summary = response['choices'][0]['message']['content'].strip()
-        
+        summary = response["choices"][0]["message"]["content"]
+        logging.info("Summary generated successfully.")
         return summary
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return None
+        logging.error(f"Error in generating summary: {e}")
+        raise
 
-def extract_video_summary(text, max_tokens=2000):
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Summarize a YouTube video using GPT")
+    parser.add_argument("video_id", help="YouTube video ID (the alphanumeric code in the URL)")
+    parser.add_argument("--max_tokens", type=int, default=150, help="Max tokens for the summary")
+    parser.add_argument("--temperature", type=float, default=0.7, help="Temperature for GPT API")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        logging.error("OPENAI_API_KEY is not set in the environment.")
+        return
+
+    openai.api_key = openai_api_key
+
     try:
-        # Split the text into manageable chunks
-        chunks = [text[i:i+max_tokens] for i in range(0, len(text), max_tokens)]
-
-        video_summary = ""
-
-        for chunk in chunks:
-            chunk_summary = extract_video_summary_from_chunk(chunk, max_tokens)
-            video_summary += chunk_summary + " "
-
-        return video_summary
+        transcript = get_transcript(args.video_id)
+        summary = generate_summary(transcript, max_tokens=args.max_tokens, temperature=args.temperature)
+        print("\n--- Video Summary ---\n")
+        print(summary)
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return None
+        logging.error("Failed to generate summary.")
 
-def extract_major_themes(text, max_tokens=2000, target_takeaways=10):
-    try:
-        # Split the text into manageable chunks
-        chunks = [text[i:i+max_tokens] for i in range(0, len(text), max_tokens)]
-
-        major_themes = set()  # To ensure uniqueness
-
-        for chunk in chunks:
-            chunk_summary = extract_video_summary_from_chunk(chunk, max_tokens)
-            major_themes.add(chunk_summary)
-
-            if len(major_themes) >= target_takeaways:
-                break
-
-        return list(major_themes)
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-        return None
 
 if __name__ == "__main__":
-    video_id = input("Enter YouTube Video ID: ")
-
-    transcript = get_transcript(video_id)
-    if transcript:
-        video_summary = extract_video_summary(transcript)
-        if video_summary:
-            print("\nVideo Summary:")
-            print(video_summary)
-
-        major_themes = extract_major_themes(transcript)
-        if major_themes:
-            print("\nMajor Themes and Points:")
-            for i, theme in enumerate(major_themes, start=1):
-                print(f"{i}. {theme}")
+    main()
