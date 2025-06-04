@@ -90,4 +90,4 @@ MIT License. Contributions welcome.
 
 ---
 
-Originally inspired by Daniel Miessler’s summarization tool. Maintained by @clorth0. Modernized for 2025 API usage.
+Originally inspired by Daniel Miessler’s summarization tool. Maintained by Matt James. Modernized for 2025 API usage.
