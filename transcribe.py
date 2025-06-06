@@ -36,6 +36,9 @@ def fetch_transcript(video_id):
     except (TranscriptsDisabled, NoTranscriptFound):
         logger.info("No transcript found via YouTube API.")
         return None
+    except Exception as e:
+        logger.error(f"Transcript fetch failed due to unexpected error: {e}")
+        return None
 
 def download_audio(video_id):
     logger.info("Downloading audio via yt-dlp...")
