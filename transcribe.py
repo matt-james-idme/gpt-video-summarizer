@@ -93,21 +93,51 @@ def extract_title(video_id):
         return "Untitled"
 
 def main(video_id):
+    print(f"[DEBUG] Starting transcription for video ID: {video_id}")
+
     transcript = fetch_transcript(video_id)
     if not transcript:
         audio_path = download_audio(video_id)
         if not audio_path:
             logger.error("Audio download failed. Cannot proceed with transcription.")
+            print("❌ Audio download failed. Exiting.")
             return
         transcript = transcribe_audio(audio_path)
 
     if not transcript:
         logger.error("Failed to retrieve transcript by any method.")
+        print("❌ No transcript was generated. Exiting.")
         return
 
     title = extract_title(video_id)
-    print("\n--- Structured Summary ---\n")
-    print(summarize_transcript(transcript, title))
+    summary = summarize_transcript(transcript, title)
+
+    # Ask the user how they want to output the summary
+    print("\nChoose output format:")
+    print("1. Print to terminal")
+    print("2. Save as Markdown (.md)")
+    print("3. Save as Plain Text (.txt)")
+    choice = input("Enter 1, 2, or 3: ").strip()
+
+    if choice == "1":
+        print("\n--- Structured Summary ---\n")
+        print(summary)
+
+    elif choice == "2":
+        filename = f"{video_id}_summary.md"
+        with open(filename, "w") as f:
+            f.write(f"# Summary for: {title}\n\n{summary}")
+        logger.info(f"Summary saved to {filename}")
+
+    elif choice == "3":
+        filename = f"{video_id}_summary.txt"
+        with open(filename, "w") as f:
+            f.write(f"Summary for: {title}\n\n{summary}")
+        logger.info(f"Summary saved to {filename}")
+
+    else:
+        print("❌ Invalid choice. Please enter 1, 2, or 3.")
+        return
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
