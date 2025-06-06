@@ -1,3 +1,4 @@
+
 import os
 import tempfile
 import logging
@@ -51,6 +52,7 @@ def download_audio(video_id):
                 'yt-dlp',
                 '--extract-audio',
                 '--audio-format', 'mp3',
+                '--postprocessor-args', 'ffmpeg:-t 600',  # limit to first 10 minutes
                 '-o', output_template,
                 url
             ], check=True)
@@ -61,11 +63,17 @@ def download_audio(video_id):
             for ext in (".mp3", ".webm"):
                 for file in files:
                     if file.endswith(ext):
-                        # Copy to a persistent temporary file
                         source = os.path.join(tmpdir, file)
                         stable_temp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
                         with open(source, "rb") as src, open(stable_temp.name, "wb") as dst:
                             dst.write(src.read())
+
+                        # Check size limit
+                        if os.path.getsize(stable_temp.name) > 26_214_400:
+                            logger.error("Audio file exceeds Whisper API size limit (25 MB).")
+                            print("❌ Audio file too large for Whisper API. Try a shorter video.")
+                            return None
+
                         return stable_temp.name
 
             raise FileNotFoundError("yt-dlp did not produce an .mp3 or .webm file — is ffmpeg installed?")
@@ -115,7 +123,6 @@ def main(video_id):
     title = extract_title(video_id)
     summary = summarize_transcript(transcript, title)
 
-    # Ask the user how they want to output the summary
     print("\nChoose output format:")
     print("1. Print to terminal")
     print("2. Save as Markdown (.md)")
@@ -125,22 +132,18 @@ def main(video_id):
     if choice == "1":
         print("\n--- Structured Summary ---\n")
         print(summary)
-
     elif choice == "2":
         filename = f"{video_id}_summary.md"
         with open(filename, "w") as f:
             f.write(f"# Summary for: {title}\n\n{summary}")
         logger.info(f"Summary saved to {filename}")
-
     elif choice == "3":
         filename = f"{video_id}_summary.txt"
         with open(filename, "w") as f:
             f.write(f"Summary for: {title}\n\n{summary}")
         logger.info(f"Summary saved to {filename}")
-
     else:
         print("❌ Invalid choice. Please enter 1, 2, or 3.")
-        return
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
