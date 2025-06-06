@@ -1,144 +1,96 @@
-#!/usr/bin/env python3
-"""
-YouTube Video Summarizer with Whisper Fallback and Structured GPT Summary
-- Attempts to fetch transcript via YouTube API
-- Falls back to Whisper (OpenAI) if needed
-- Summarizes using GPT-4 with structured prompt
-"""
-
 import os
-import sys
-import subprocess
 import tempfile
-import threading
-import time
-import openai
-from pytube import YouTube
+import logging
+import sys
+
+from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
+from pytube import YouTube
+import subprocess
+from openai import OpenAI
+from gpt import summarize_transcript  # Assuming your summarization logic is in gpt.py
 
-# Set API key from environment
-openai.api_key = os.getenv("OPENAI_API_KEY")
+from tqdm import tqdm
 
-def log(msg):
-    print(f"[LOG] {msg}")
+# Load .env variables
+load_dotenv()
 
-def get_transcript(video_id):
+# Validate OpenAI key early
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise RuntimeError("OPENAI_API_KEY not found. Please set it in a .env file or as an environment variable.")
+
+# Set up OpenAI client
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+# Logging config
+logging.basicConfig(level=logging.INFO, format='[LOG] %(message)s')
+logger = logging.getLogger(__name__)
+
+def fetch_transcript(video_id):
+    logger.info("Attempting to fetch YouTube transcript...")
     try:
-        log("Attempting to fetch YouTube transcript...")
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)
-        return " ".join([entry['text'] for entry in transcript])
-    except TranscriptsDisabled:
-        log("Transcripts are disabled for this video.")
-    except NoTranscriptFound:
-        log("No transcript found via YouTube API.")
-    except Exception as e:
-        log(f"Unexpected transcript error: {e}")
-    return None
+        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript_text = " ".join([t["text"] for t in transcript_list])
+        logger.info("Successfully fetched transcript via YouTube API.")
+        return transcript_text
+    except (TranscriptsDisabled, NoTranscriptFound):
+        logger.info("No transcript found via YouTube API.")
+        return None
 
 def download_audio(video_id):
-    log("Downloading audio via yt-dlp...")
-    url = f"https://youtube.com/watch?v={video_id}"
-    tmp_dir = tempfile.mkdtemp()
-    audio_path = os.path.join(tmp_dir, "audio.mp3")
-    command = [
-        "yt-dlp",
-        "-x", "--audio-format", "mp3",
-        "-o", audio_path,
-        url
-    ]
+    logger.info("Downloading audio via yt-dlp...")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = os.path.join(tmpdir, 'audio.mp3')
+        url = f"https://youtube.com/watch?v={video_id}"
+        subprocess.run([
+            'yt-dlp',
+            '--extract-audio',
+            '--audio-format', 'mp3',
+            '-o', os.path.join(tmpdir, 'audio.%(ext)s'),
+            url
+        ], check=True)
+        return output_path
+
+def transcribe_audio(path):
+    logger.info("Transcribing audio with OpenAI Whisper API (new SDK)...")
     try:
-        subprocess.run(command, check=True)
-        return audio_path
-    except subprocess.CalledProcessError as e:
-        log(f"Audio download failed: {e}")
-        return None
-
-def transcribe_whisper(audio_path):
-    log("Transcribing audio with OpenAI Whisper API (new SDK)...")
-
-    spinner_running = True
-
-    def spinner():
-        while spinner_running:
-            for ch in "|/-\\":
-                print(f"\r[WAIT] Whisper API processing... {ch}", end="", flush=True)
-                time.sleep(0.2)
-
-    spinner_thread = threading.Thread(target=spinner)
-    spinner_thread.start()
-
-    try:
-        with open(audio_path, "rb") as f:
-            transcript = openai.audio.transcriptions.create(
-                model="whisper-1",
-                file=f
-            )
-            return transcript.text
+        with open(path, "rb") as audio_file:
+            with tqdm(desc="[WAIT] Whisper API processing", bar_format="{desc} {bar}") as pbar:
+                transcript_obj = client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file
+                )
+                pbar.update(1)
+        return transcript_obj.text
     except Exception as e:
-        print()
-        log(f"Whisper transcription failed: {e}")
+        logger.error(f"Whisper transcription failed: {e}")
         return None
-    finally:
-        spinner_running = False
-        spinner_thread.join()
-        print("\r[LOG] Whisper transcription complete.        ")
 
-def get_video_title(video_id):
+def extract_title(video_id):
     try:
         yt = YouTube(f"https://youtube.com/watch?v={video_id}")
         return yt.title
-    except Exception as e:
-        log(f"Failed to fetch video title: {e}")
+    except Exception:
         return "Untitled"
 
-def summarize(transcript, title):
-    log("Summarizing with GPT...")
-    prompt = (
-        f"You are a helpful assistant. Analyze the following YouTube transcript titled '{title}' and provide:\n"
-        f"- A concise summary of the main ideas\n"
-        f"- A list of key points or arguments\n"
-        f"- Any actionable steps or instructions mentioned\n"
-        f"- Any statistics, data points, or factual claims\n\n"
-        f"Transcript:\n{transcript}"
-    )
-    try:
-        response = openai.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that summarizes YouTube videos."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5,
-            max_tokens=1000
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        log(f"GPT summarization failed: {e}")
-        return None
+def main(video_id):
+    transcript = fetch_transcript(video_id)
+    if not transcript:
+        audio_path = download_audio(video_id)
+        transcript = transcribe_audio(audio_path)
+
+    if not transcript:
+        logger.error("Failed to retrieve transcript by any method.")
+        return
+
+    title = extract_title(video_id)
+    print("\n--- Structured Summary ---\n")
+    print(summarize_transcript(transcript, title))
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python transcribe.py <YouTubeVideoID>")
+        print("Usage: python transcribe.py <youtube_video_id>")
         sys.exit(1)
-
     video_id = sys.argv[1]
-    transcript = get_transcript(video_id)
-
-    if not transcript:
-        audio_path = download_audio(video_id)
-        if audio_path:
-            transcript = transcribe_whisper(audio_path)
-
-    if not transcript:
-        log("Failed to retrieve transcript by any method.")
-        sys.exit(1)
-
-    title = get_video_title(video_id)
-    log(f"Video Title: {title}")
-
-    summary = summarize(transcript, title)
-    if summary:
-        print("\n--- Structured Summary ---\n")
-        print(summary)
-    else:
-        log("Failed to generate summary.")
+    main(video_id)
