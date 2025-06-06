@@ -1,93 +1,99 @@
-# GPT YouTube Video Summarizer (Updated)
+# GPT Video Summarizer
 
-This is a Python-based tool for extracting transcripts from YouTube videos and summarizing them using OpenAI's GPT models. The script leverages the YouTube Transcript API and OpenAI's `chat.completions` endpoint to provide structured summaries with a title, key bullet points, action steps, and any cited statistics.
+This is a Python-based command-line tool for extracting transcripts from YouTube videos and generating structured summaries using OpenAI's GPT models. It first attempts to retrieve transcripts via the YouTube Transcript API, then falls back to audio transcription using the OpenAI Whisper API if necessary.
 
 ## Features
 
-- Fetches YouTube video transcripts using `youtube_transcript_api`
-- Falls back to OpenAI Whisper API if transcript is unavailable
-- Generates structured summaries using GPT-4 (or GPT-3.5)
-- Real-time spinner progress during transcription
-- Secure API key handling using `.env` or environment variables
-- Modular and extensible Python script
+- Extracts YouTube transcripts using `youtube_transcript_api`
+- Falls back to Whisper transcription via OpenAI API if transcript is unavailable
+- Summarizes content using GPT-4 (or GPT-3.5 as a fallback)
+- Outputs summary in structured format: summary, key points, actions, and statistics
+- Prompts user to choose output format: terminal, `.md`, or `.txt`
+- Secure API key handling via `.env` file
+- Clear logging for each step and failure mode
 
 ## Requirements
 
-- Python 3.8+
-- OpenAI API key (set via `.env` or `OPENAI_API_KEY`)
-- Required libraries:
-  ```bash
-  pip install openai youtube-transcript-api pytube yt-dlp python-dotenv
-  ```
-- `ffmpeg` for audio processing (required by `yt-dlp`)
-  ```bash
-  brew install ffmpeg  # macOS
-  sudo apt install ffmpeg  # Ubuntu/Debian
-  ```
+- Python 3.8 or higher
+- `ffmpeg` (required by `yt-dlp` for audio extraction)
+- An OpenAI API key
+
+## Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/clorth0/gpt-video-summarizer.git
+   cd gpt-video-summarizer
+   ```
+
+2. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Install `ffmpeg` if not already installed:
+   - macOS: `brew install ffmpeg`
+   - Ubuntu/Debian: `sudo apt install ffmpeg`
+
+5. Create a `.env` file in the project root:
+   ```env
+   OPENAI_API_KEY=your-openai-api-key
+   ```
 
 ## Usage
 
-### Step 1: Set your OpenAI API Key
-
-Create a `.env` file in the root directory:
-```env
-OPENAI_API_KEY=your-api-key-here
-```
-Or export it directly:
-```bash
-export OPENAI_API_KEY=your-api-key-here
-```
-
-### Step 2: Run the summarizer
+Run the script using a YouTube video ID (not the full URL):
 
 ```bash
 python transcribe.py <video_id>
 ```
 
-### Example
+Example:
+
 ```bash
 python transcribe.py dQw4w9WgXcQ
 ```
 
-## Output
-
-The output will be printed to the console in a structured format:
+You will be prompted to choose an output format:
 
 ```
---- Structured Summary ---
-
-Summary:
-This video discusses how sustained effort beats innate talent over the long term.
-
-Key Points:
-- Daily practice outperforms occasional bursts of brilliance
-- Talent without consistency leads to stagnation
-- Routine creates long-term momentum
-
-Actionable Steps:
-- Set small, repeatable goals
-- Focus on showing up every day
-- Track progress over time
-
-Statistics or Claims:
-- Referenced the “10,000-hour rule” as a benchmark for mastery
+Choose output format:
+1. Print to terminal
+2. Save as Markdown (.md)
+3. Save as Plain Text (.txt)
+Enter 1, 2, or 3:
 ```
 
-## Development Notes
+## Output Format
 
-- Modular structure:
-  - `get_transcript(video_id)` — fetch from YouTube
-  - `download_audio(video_id)` + `transcribe_whisper()` — fallback
-  - `summarize(transcript, title)` — GPT-powered summary
-- Uses OpenAI Python SDK v1.x (latest)
-- Spinner indicates processing during Whisper API calls
-- Structured prompt improves clarity of output
-- Errors are logged clearly for diagnosis
+Summaries include the following structure:
+
+- One-line summary
+- 3–5 key points
+- 2–3 actionable steps
+- Any statistics or claims mentioned
+
+Markdown and text outputs are saved in the current working directory, named according to the video ID.
+
+## Project Structure
+
+- `transcribe.py`: Main CLI script
+- `gpt.py`: Handles summarization logic via OpenAI API
+- `requirements.txt`: Python dependencies
+- `.env`: Stores OpenAI API key (excluded from version control)
+
+## Notes
+
+- You must have a valid OpenAI API key with access to the GPT and Whisper APIs.
+- This tool is designed for personal or research use; review OpenAI’s terms of service for usage constraints.
+- Ensure that `yt-dlp` and `ffmpeg` are functioning correctly in your environment.
 
 ## License
 
 MIT License. Contributions welcome.
-
----
-
-Originally inspired by Daniel Miessler’s summarization tool. Maintained by Matt James. Modernized for 2025 API usage.
