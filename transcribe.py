@@ -1,9 +1,13 @@
+import ssl
+import certifi
+ssl._create_default_https_context = ssl.create_default_context(cafile=certifi.where())
 
 import os
 import tempfile
 import logging
 import sys
 import subprocess
+import shutil
 
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
@@ -44,6 +48,14 @@ def fetch_transcript(video_id):
 def download_audio(video_id):
     logger.info("Downloading audio via yt-dlp...")
 
+    if not shutil.which("yt-dlp"):
+        logger.error("'yt-dlp' not found in PATH. Please install it.")
+        print("❌ yt-dlp is not installed. Use `brew install yt-dlp` or `pipx install yt-dlp`.")
+        return None
+
+    if not shutil.which("ffmpeg"):
+        logger.warning("⚠ 'ffmpeg' not found in PATH. Audio conversion may fail.")
+
     with tempfile.TemporaryDirectory() as tmpdir:
         output_template = os.path.join(tmpdir, 'audio.%(ext)s')
         url = f"https://youtube.com/watch?v={video_id}"
@@ -68,7 +80,6 @@ def download_audio(video_id):
                         with open(source, "rb") as src, open(stable_temp.name, "wb") as dst:
                             dst.write(src.read())
 
-                        # Check size limit
                         if os.path.getsize(stable_temp.name) > 26_214_400:
                             logger.error("Audio file exceeds Whisper API size limit (25 MB).")
                             print("❌ Audio file too large for Whisper API. Try a shorter video.")
