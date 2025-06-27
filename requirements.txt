@@ -1,3 +1,6 @@
+pytube
+youtube-transcript-api
 openai
-youtube_transcript_api
+certifi
 python-dotenv
+tqdm
