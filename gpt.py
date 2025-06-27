@@ -17,7 +17,7 @@ def summarize_transcript(transcript: str, title: str) -> str:
     transcript = truncate_text(transcript)
 
     system_prompt = (
-        "You are an expert summarizer. Summarize transcripts from educational YouTube videos into:\n"
+        "You are an expert summarizer that focuses on takening complex topics and making them easier to understand. With a focus on clarity and prose, summarize transcripts from videos into:\n"
         "- A one-line summary\n"
         "- 3–5 key points\n"
         "- 2–3 actionable steps\n"
